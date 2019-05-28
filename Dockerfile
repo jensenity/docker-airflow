@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_VERSION=1.10.2
+ARG AIRFLOW_VERSION=1.10.3
 ARG AIRFLOW_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
@@ -42,6 +42,9 @@ RUN set -ex \
         freetds-bin \
         build-essential \
         default-libmysqlclient-dev \
+        # mysql-server \
+        # libmysqlclient-dev \
+        # mysql-python \
         apt-utils \
         curl \
         rsync \
@@ -56,8 +59,14 @@ RUN set -ex \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
-    && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
-    && pip install 'redis>=2.10.5,<3' \
+    && pip install apache-airflow[crypto,celery,postgres,password,s3,slack,redis,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
+    && pip install "celery[redis]>=4.2.1, <4.3.0" \
+    && pip install -U pip==19.0.1 setuptools==40.7.0 wheel==0.32.3 \
+    && pip install pytz==2018.9  \
+    && pip install pyOpenSSL==19.0.0 \
+    && pip install ndg-httpsclient==0.5.1 \
+    && pip install pyasn1==0.4.5 \
+    && pip install psycopg2==2.7.7 \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
@@ -70,8 +79,11 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base
 
+#COPY create-user.py /create-user.py
 COPY script/entrypoint.sh /entrypoint.sh
-COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+# COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+COPY config/airflow-2.cfg ${AIRFLOW_HOME}/airflow.cfg
+#COPY config/webserver_config.py /usr/local/airflow/webserver_config.py
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
 

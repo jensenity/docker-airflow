@@ -1,20 +1,38 @@
 #!/usr/bin/env bash
 
+# set -x
+
 TRY_LOOP="20"
 
 : "${REDIS_HOST:="redis"}"
 : "${REDIS_PORT:="6379"}"
 : "${REDIS_PASSWORD:=""}"
 
+: "${DB_TYPE:="mysql"}"
+# if [ "$DB_TYPE" = "mysql" ];then
+# : "${MYSQL_HOST:="mysql"}"
+# : "${MYSQL_PORT:="3306"}"
+# : "${MYSQL_USER:="root"}"
+# : "${MYSQL_PASSWORD:="airflow"}"
+# : "${MYSQL_DB:="airflow"}"
+if [ "$DB_TYPE" = "mysql" ];then
+: "${MYSQL_HOST:="mysql"}"
+: "${MYSQL_PORT:="3306"}"
+: "${MYSQL_USER:="airflow"}"
+: "${MYSQL_PASSWORD:="airflow"}"
+: "${MYSQL_DB:="airflow"}"
+else
 : "${POSTGRES_HOST:="postgres"}"
 : "${POSTGRES_PORT:="5432"}"
 : "${POSTGRES_USER:="airflow"}"
 : "${POSTGRES_PASSWORD:="airflow"}"
 : "${POSTGRES_DB:="airflow"}"
+fi
 
 # Defaults and back-compat
 : "${AIRFLOW__CORE__FERNET_KEY:=${FERNET_KEY:=$(python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print(FERNET_KEY)")}}"
 : "${AIRFLOW__CORE__EXECUTOR:=${EXECUTOR:-Sequential}Executor}"
+# : "${AIRFLOW__CORE__EXECUTOR:=${EXECUTOR:-Celery}Executor}"
 
 export \
   AIRFLOW__CELERY__BROKER_URL \
@@ -57,9 +75,18 @@ wait_for_port() {
 }
 
 if [ "$AIRFLOW__CORE__EXECUTOR" != "SequentialExecutor" ]; then
-  AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
-  AIRFLOW__CELERY__RESULT_BACKEND="db+postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
-  wait_for_port "Postgres" "$POSTGRES_HOST" "$POSTGRES_PORT"
+#  AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
+#  AIRFLOW__CELERY__RESULT_BACKEND="db+postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
+#  wait_for_port "Postgres" "$POSTGRES_HOST" "$POSTGRES_PORT"
+ if [ "$DB_TYPE" = "mysql" ];then
+   AIRFLOW__CORE__SQL_ALCHEMY_CONN="mysql://$MYSQL_USER:$MYSQL_PASSWORD@$MYSQL_HOST:$MYSQL_PORT/$MYSQL_DB"
+   AIRFLOW__CELERY__RESULT_BACKEND="db+mysql://$MYSQL_USER:$MYSQL_PASSWORD@$MYSQL_HOST:$MYSQL_PORT/$MYSQL_DB"
+   wait_for_port "$DB_TYPE" "$MYSQL_HOST" "$MYSQL_PORT"
+ else
+   AIRFLOW__CORE__SQL_ALCHEMY_CONN="postgresql+psycopg2://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
+   AIRFLOW__CELERY__RESULT_BACKEND="db+postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB"
+   wait_for_port "$DB_TYPE" "$POSTGRES_HOST" "$POSTGRES_PORT"
+ fi
 fi
 
 if [ "$AIRFLOW__CORE__EXECUTOR" = "CeleryExecutor" ]; then
@@ -69,7 +96,11 @@ fi
 
 case "$1" in
   webserver)
+    # airflow upgradedb
     airflow initdb
+    # airflow upgradedb
+    airflow create_user -r Admin -u admin -e airflow@groundx.xyz -f admin -l user -p airflowgx1234!
+    # airflow users --create --username airflow --lastname admin --firstname airflow --email jensen.yap@groundx.xyz --role Admin --password test
     if [ "$AIRFLOW__CORE__EXECUTOR" = "LocalExecutor" ]; then
       # With the "Local" executor it should all run in one container.
       airflow scheduler &

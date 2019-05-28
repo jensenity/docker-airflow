@@ -1,0 +1,142 @@
+version: '2'
+services:
+    redis:
+        image: 'redis:3.2.7'
+        # command: redis-server --requirepass redispass
+    # mysql:
+    #     image: 'mysql:5.7'
+    #     # command: --default-authentication-plugin=mysql_native_password
+    #     # restart: always
+    #     environment:
+    #         MYSQL_ROOT_PASSWORD: airflowgx1234
+    #         MYSQL_DATABASE: airflow
+    #         # MYSQL_ROOT_PASSWORD: testingtesting123
+    #         # MYSQL_DATABASE: airflow
+    #     ports:
+    #         - "3306:3306"
+    #     volumes:
+    #         - ./mysqlconf:/etc/mysql/conf.d
+
+    # postgres:
+    #     image: postgres:9.6
+    #     environment:
+    #         - POSTGRES_USER=airflow
+    #         - POSTGRES_PASSWORD=airflow
+    #         - POSTGRES_DB=airflow
+    #     # Uncomment these lines to persist data on the local filesystem.
+    #     #     - PGDATA=/var/lib/postgresql/data/pgdata
+    #     # volumes:
+    #     #     - ./pgdata:/var/lib/postgresql/data/pgdata
+    #     ports:
+    #         - "5432:5432"
+
+    webserver:
+        # image: puckel/docker-airflow:1.10.2
+        # image: alvyl/docker-airflow:1.10.3
+        build: .
+        restart: always
+        depends_on:
+            # - postgres
+            # - mysql
+            - redis
+        environment:
+            - LOAD_EX=n
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+            - DB_TYPE=mysql
+            # - AIRFLOW__CORE__LOAD_EXAMPLES=True
+            - AIRFLOW__CORE__SECURE_MODE=True
+            - AIRFLOW__WEBSERVER__RBAC=true
+            - AIRFLOW__CORE__DAGS_FOLDER=/usr/local/airflow/dags
+            # - AIRFLOW__CELERY__RESULT_BACKEND=db+mysql://airflow:airflowgx1234@gx-airflow-dev.cluster-ctv4o5mav0pe.ap-northeast-2.rds.amazonaws.com:3306/airflow
+            # - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://airflow:airflowgx1234@gx-airflow-dev.cluster-ctv4o5mav0pe.ap-northeast-2.rds.amazonaws.com:3306/airflow
+            # - POSTGRES_USER=airflow
+            # - POSTGRES_PASSWORD=airflow
+            # - POSTGRES_DB=airflow
+            # - REDIS_PASSWORD=redispass
+        volumes:
+            - /Users/jensen/ground-sylar/dags:/usr/local/airflow/dags
+            - ./volumes/airflow_config/webserver_config.py:/usr/local/airflow/webserver_config.py:z
+            # Uncomment to include custom plugins
+            # - ./plugins:/usr/local/airflow/plugins
+        ports:
+            - "8080:8080"
+        command: webserver
+        #healthcheck:
+          #  test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+          #  interval: 30s
+          #  timeout: 30s
+          #  retries: 3
+
+    flower:
+#        image: puckel/docker-airflow:1.10.2
+        # image: alvyl/docker-airflow:1.10.3
+        build: .
+        restart: always
+        depends_on:
+            - redis
+        environment:
+            - EXECUTOR=Celery
+            - DB_TYPE=mysql
+            - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+            # - AIRFLOW__CORE__LOAD_EXAMPLES=True
+            # - AIRFLOW__CELERY__RESULT_BACKEND=db+mysql://airflow:airflowgx1234@gx-airflow-dev.cluster-ctv4o5mav0pe.ap-northeast-2.rds.amazonaws.com:3306/airflow
+            # - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://airflow:airflowgx1234@gx-airflow-dev.cluster-ctv4o5mav0pe.ap-northeast-2.rds.amazonaws.com:3306/airflow
+            # - REDIS_PASSWORD=redispass
+        ports:
+            - "5555:5555"
+        command: flower
+
+    scheduler:
+#        image: puckel/docker-airflow:1.10.2
+        # image: alvyl/docker-airflow:1.10.3
+        build: .
+        restart: always
+        depends_on:
+            - webserver
+        volumes:
+            - /Users/jensen/ground-sylar/dags:/usr/local/airflow/dags
+            # Uncomment to include custom plugins
+            # - ./plugins:/usr/local/airflow/plugins
+        environment:
+            - LOAD_EX=n
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - DB_TYPE=mysql
+            - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+            - AIRFLOW__CORE__DAGS_FOLDER=/usr/local/airflow/dags
+            # - AIRFLOW__CORE__LOAD_EXAMPLES=True
+            # - AIRFLOW__CELERY__RESULT_BACKEND=db+mysql://airflow:airflowgx1234@gx-airflow-dev.cluster-ctv4o5mav0pe.ap-northeast-2.rds.amazonaws.com:3306/airflow
+            # - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://airflow:airflowgx1234@gx-airflow-dev.cluster-ctv4o5mav0pe.ap-northeast-2.rds.amazonaws.com:3306/airflow
+            # - POSTGRES_USER=airflow
+            # - POSTGRES_PASSWORD=airflow
+            # - POSTGRES_DB=airflow
+            # - REDIS_PASSWORD=redispass
+        command: scheduler
+
+    worker:
+#        image: puckel/docker-airflow:1.10.2
+        # image: alvyl/docker-airflow:1.10.3
+        build: .
+        restart: always
+        depends_on:
+            - scheduler
+        volumes:
+            - /Users/jensen/ground-sylar/dags:/usr/local/airflow/dags
+            # Uncomment to include custom plugins
+            # - ./plugins:/usr/local/airflow/plugins
+        environment:
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - DB_TYPE=mysql
+            - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+            - AIRFLOW__CORE__DAGS_FOLDER=/usr/local/airflow/dags
+            # - AIRFLOW__CORE__LOAD_EXAMPLES=True
+            # - AIRFLOW__CELERY__RESULT_BACKEND=db+mysql://airflow:airflowgx1234@gx-airflow-dev.cluster-ctv4o5mav0pe.ap-northeast-2.rds.amazonaws.com:3306/airflow
+            # - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://airflow:airflowgx1234@gx-airflow-dev.cluster-ctv4o5mav0pe.ap-northeast-2.rds.amazonaws.com:3306/airflow
+            # - POSTGRES_USER=airflow
+            # - POSTGRES_PASSWORD=airflow
+            # - POSTGRES_DB=airflow
+            # - REDIS_PASSWORD=redispass
+        command: worker
