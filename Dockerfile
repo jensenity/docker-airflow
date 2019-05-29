@@ -59,6 +59,7 @@ RUN set -ex \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
+    && pip install kafka-python \
     && pip install apache-airflow[crypto,celery,postgres,password,s3,slack,redis,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install "celery[redis]>=4.2.1, <4.3.0" \
     && pip install -U pip==19.0.1 setuptools==40.7.0 wheel==0.32.3 \
