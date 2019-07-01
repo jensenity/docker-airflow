@@ -50,10 +50,12 @@ RUN set -ex \
         rsync \
         netcat \
         locales \
+        pigz \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
     && useradd -ms /bin/bash -d ${AIRFLOW_HOME} airflow \
+    && pip install --upgrade pip \
     && pip install -U pip setuptools wheel \
     && pip install pytz \
     && pip install pyOpenSSL \
@@ -68,6 +70,19 @@ RUN set -ex \
     && pip install ndg-httpsclient==0.5.1 \
     && pip install pyasn1==0.4.5 \
     && pip install psycopg2==2.7.7 \
+    && pip install ethereum-etl \
+    && pip install httplib2 \
+    && pip install google-auth-httplib2 \
+    && pip install google-cloud-bigquery \
+    && pip install --upgrade google-api-python-client \
+    && pip install --upgrade google-cloud-storage \
+    && pip install gspread \
+    && pip install oauth2client \
+    && pip install pandas_gbq \
+    && pip install boto3 \
+    && pip install bs4 \
+    && pip install pandas \
+    && pip install pyspark \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
