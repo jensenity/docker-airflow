@@ -34,6 +34,7 @@ RUN set -ex \
         libffi-dev \
         libpq-dev \
         git \
+        openssh-server \
     ' \
     && apt-get update -yqq \
     && apt-get upgrade -yqq \
@@ -51,6 +52,7 @@ RUN set -ex \
         netcat \
         locales \
         pigz \
+        ssh \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
@@ -83,8 +85,19 @@ RUN set -ex \
     && pip install bs4 \
     && pip install pandas \
     && pip install pyspark \
-    && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
-    && apt-get purge --auto-remove -yqq $buildDeps \
+    && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi 
+
+
+#COPY create-user.py /create-user.py
+COPY script/entrypoint.sh /entrypoint.sh
+# COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+COPY config/airflow-2.cfg ${AIRFLOW_HOME}/airflow.cfg
+#COPY config/webserver_config.py /usr/local/airflow/webserver_config.py
+
+# Git Clone with Personal Token on klaytn-etl (GitHub, Settings --> Developer Settings)
+RUN git clone https://1f15f18763ae4a449af2c3ffc58dd093683c0ae2@github.com/ground-x/klaytn-etl.git
+
+RUN apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
     && rm -rf \
@@ -94,12 +107,6 @@ RUN set -ex \
         /usr/share/man \
         /usr/share/doc \
         /usr/share/doc-base
-
-#COPY create-user.py /create-user.py
-COPY script/entrypoint.sh /entrypoint.sh
-# COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
-COPY config/airflow-2.cfg ${AIRFLOW_HOME}/airflow.cfg
-#COPY config/webserver_config.py /usr/local/airflow/webserver_config.py
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
 
