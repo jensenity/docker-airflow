@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_VERSION=1.10.3
+ARG AIRFLOW_VERSION=1.10.4
 ARG AIRFLOW_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
@@ -87,15 +87,8 @@ RUN set -ex \
     && pip install pyspark \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi 
 
-
-#COPY create-user.py /create-user.py
-COPY script/entrypoint.sh /entrypoint.sh
-# COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
-COPY config/airflow-2.cfg ${AIRFLOW_HOME}/airflow.cfg
-#COPY config/webserver_config.py /usr/local/airflow/webserver_config.py
-
 # Git Clone with Personal Token on klaytn-etl (GitHub, Settings --> Developer Settings)
-RUN git clone https://1f15f18763ae4a449af2c3ffc58dd093683c0ae2@github.com/ground-x/klaytn-etl.git
+RUN git clone https://104fa31f697d75ca40420fa527bac9a8d5055dc1@github.com/ground-x/klaytn-etl.git
 
 RUN apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
@@ -109,6 +102,12 @@ RUN apt-get purge --auto-remove -yqq $buildDeps \
         /usr/share/doc-base
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
+
+#COPY create-user.py /create-user.py
+COPY script/entrypoint.sh /entrypoint.sh
+# COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+COPY config/airflow-2.cfg ${AIRFLOW_HOME}/airflow.cfg
+#COPY config/webserver_config.py /usr/local/airflow/webserver_config.py
 
 EXPOSE 8080 5555 8793
 
