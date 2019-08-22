@@ -88,7 +88,7 @@ RUN set -ex \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi 
 
 # Git Clone with Personal Token on klaytn-etl (GitHub, Settings --> Developer Settings)
-RUN git clone https://104fa31f697d75ca40420fa527bac9a8d5055dc1@github.com/ground-x/klaytn-etl.git
+RUN git clone https://2bd47e6736499fcc37e1f7094064bd1145bfb61e@github.com/ground-x/klaytn-etl.git
 
 RUN apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
@@ -100,6 +100,9 @@ RUN apt-get purge --auto-remove -yqq $buildDeps \
         /usr/share/man \
         /usr/share/doc \
         /usr/share/doc-base
+
+RUN cp -r /klaytn-etl/klaytnetl /usr/local/lib/python3.6/site-packages/   
+RUN cp -r /klaytn-etl/ethereumpoaetl /usr/local/lib/python3.6/site-packages/
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
 
