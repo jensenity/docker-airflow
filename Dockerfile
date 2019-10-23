@@ -4,7 +4,7 @@
 # BUILD: docker build --rm -t puckel/docker-airflow .
 # SOURCE: https://github.com/puckel/docker-airflow
 
-FROM python:3.6-slim
+FROM python:3.7-slim-stretch
 LABEL maintainer="Puckel_"
 
 # Never prompts the user for choices on installation/configuration of packages
@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_VERSION=1.10.4
+ARG AIRFLOW_VERSION=1.10.5
 ARG AIRFLOW_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
@@ -65,6 +65,7 @@ RUN set -ex \
     && pip install pyasn1 \
     && pip install kafka-python \
     && pip install apache-airflow[crypto,celery,postgres,password,s3,slack,redis,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
+    && pip install airflow-exporter \
     && pip install "celery[redis]>=4.2.1, <4.3.0" \
     && pip install -U pip==19.0.1 setuptools==40.7.0 wheel==0.32.3 \
     && pip install pytz==2018.9  \
@@ -85,10 +86,17 @@ RUN set -ex \
     && pip install bs4 \
     && pip install pandas \
     && pip install pyspark \
+    && pip install apiclient \
+    && pip install slackclient \
+    && pip install selenium \
+    && pip install pytrends==4.4.0 \
+    && pip install spectrify \
+    && pip install neo4j \
+    && pip install py2neo \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi 
 
 # Git Clone with Personal Token on klaytn-etl (GitHub, Settings --> Developer Settings)
-RUN git clone https://2bd47e6736499fcc37e1f7094064bd1145bfb61e@github.com/ground-x/klaytn-etl.git
+# RUN git clone https://571a39e7e0c2fbb3b1b8361bf453bb08eb126a92@github.com/ground-x/klaytn-etl.git
 
 RUN apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
@@ -101,15 +109,17 @@ RUN apt-get purge --auto-remove -yqq $buildDeps \
         /usr/share/doc \
         /usr/share/doc-base
 
-RUN cp -r /klaytn-etl/klaytnetl /usr/local/lib/python3.6/site-packages/   
-RUN cp -r /klaytn-etl/ethereumpoaetl /usr/local/lib/python3.6/site-packages/
+# RUN cp -r /klaytn-etl/klaytnetl /usr/local/lib/python3.7/site-packages/   
+# RUN cp -r /klaytn-etl/ethereumpoaetl /usr/local/lib/python3.7/site-packages/
+COPY klaytn-etl/klaytnetl/ /usr/local/lib/python3.7/site-packages/klaytnetl/
+COPY klaytn-etl/ethereumpoaetl/ /usr/local/lib/python3.7/site-packages/ethereumpoaetl/
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
 
 #COPY create-user.py /create-user.py
 COPY script/entrypoint.sh /entrypoint.sh
-# COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
-COPY config/airflow-2.cfg ${AIRFLOW_HOME}/airflow.cfg
+COPY config/airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
+# COPY config/airflow-2.cfg ${AIRFLOW_HOME}/airflow.cfg
 #COPY config/webserver_config.py /usr/local/airflow/webserver_config.py
 
 EXPOSE 8080 5555 8793
