@@ -96,7 +96,6 @@ fi
 
 case "$1" in
   webserver)
-    # airflow upgradedb
     airflow initdb
     # airflow upgradedb
     airflow create_user -r Admin -u admin -e airflow@groundx.xyz -f admin -l user -p airflowgx1234!
