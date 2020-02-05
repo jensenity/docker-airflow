@@ -60,6 +60,7 @@ RUN set -ex \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install 'redis==3.2' \
     && pip install -U pip==19.0.1 setuptools==40.7.0 wheel==0.32.3 \
+    && pip install airflow-exporter \
     && pip install pytz==2018.9  \
     && pip install pyOpenSSL==19.0.0 \
     && pip install ndg-httpsclient==0.5.1 \

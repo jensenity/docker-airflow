@@ -4,12 +4,12 @@ services:
         image: 'redis:5.0.5'
         # command: redis-server --requirepass redispass
 
-    postgres:
-        image: postgres:9.6
-        environment:
-            - POSTGRES_USER=airflow
-            - POSTGRES_PASSWORD=airflow
-            - POSTGRES_DB=airflow
+    # postgres:
+        # image: postgres:9.6
+        # environment:
+        #     - POSTGRES_USER=airflow
+        #     - POSTGRES_PASSWORD=airflow
+        #     - POSTGRES_DB=airflow
         # Uncomment these lines to persist data on the local filesystem.
         #     - PGDATA=/var/lib/postgresql/data/pgdata
         # volumes:
@@ -20,12 +20,13 @@ services:
         build: .        
         restart: always
         depends_on:
-            - postgres
+            # - postgres
             - redis
         environment:
             - LOAD_EX=n
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
             - EXECUTOR=Celery
+            - DB_TYPE=mysql
             # - POSTGRES_USER=airflow
             # - POSTGRES_PASSWORD=airflow
             # - POSTGRES_DB=airflow
@@ -51,6 +52,7 @@ services:
             - redis
         environment:
             - EXECUTOR=Celery
+            - DB_TYPE=mysql
             # - REDIS_PASSWORD=redispass
         ports:
             - "5555:5555"
@@ -67,6 +69,7 @@ services:
             # Uncomment to include custom plugins
             # - ./plugins:/usr/local/airflow/plugins
         environment:
+            - DB_TYPE=mysql
             - LOAD_EX=n
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
             - EXECUTOR=Celery
@@ -87,6 +90,7 @@ services:
             # Uncomment to include custom plugins
             # - ./plugins:/usr/local/airflow/plugins
         environment:
+            - DB_TYPE=mysql
             - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
             - EXECUTOR=Celery
             # - POSTGRES_USER=airflow
