@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_VERSION=1.10.7
+ARG AIRFLOW_VERSION=1.10.9
 ARG AIRFLOW_USER_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
@@ -75,6 +75,7 @@ RUN set -ex \
     && pip install gspread \
     && pip install oauth2client \
     && pip install pandas_gbq \
+    && pip install boto \
     && pip install boto3 \
     && pip install bs4 \
     && pip install pandas \
