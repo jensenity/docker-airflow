@@ -76,7 +76,7 @@ RUN set -ex \
     && pip install oauth2client \
     && pip install pandas_gbq \
     && pip install boto \
-    && pip install boto3 \
+    && pip install boto3==1.12.9 \
     && pip install bs4 \
     && pip install pandas \
     && pip install pyspark \
