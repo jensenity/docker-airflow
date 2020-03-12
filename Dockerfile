@@ -79,6 +79,7 @@ RUN set -ex \
     && pip install boto3==1.12.9 \
     && pip install bs4 \
     && pip install pandas \
+    && pip install docker \
     && pip install pyspark \
     && pip install apiclient \
     && pip install slackclient \
