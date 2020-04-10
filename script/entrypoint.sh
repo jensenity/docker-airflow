@@ -90,6 +90,7 @@ fi
 case "$1" in
   webserver)
     airflow initdb
+    airflow upgradedb
     if [ "$AIRFLOW__CORE__EXECUTOR" = "LocalExecutor" ] || [ "$AIRFLOW__CORE__EXECUTOR" = "SequentialExecutor" ]; then
       # With the "Local" and "Sequential" executors it should all run in one container.
       airflow scheduler &
