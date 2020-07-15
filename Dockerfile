@@ -1,18 +1,18 @@
-# VERSION 1.10.7
-# AUTHOR: Matthieu "Puckel_" Roisil
-# DESCRIPTION: Basic Airflow container
+# VERSION 1.10.11
+# AUTHOR: Jensen "jensenity" Yap
+# DESCRIPTION: Customized Airflow container
 # BUILD: docker build --rm -t puckel/docker-airflow .
 # SOURCE: https://github.com/puckel/docker-airflow
 
 FROM python:3.7-slim-stretch
-LABEL maintainer="Puckel_"
+LABEL maintainer="jensenity"
 
 # Never prompts the user for choices on installation/configuration of packages
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_VERSION=1.10.10
+ARG AIRFLOW_VERSION=1.10.11
 ARG AIRFLOW_USER_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
@@ -66,7 +66,6 @@ RUN set -ex \
     && pip install ndg-httpsclient==0.5.1 \
     && pip install pyasn1==0.4.5 \
     && pip install psycopg2==2.7.7 \
-    && pip install ethereum-etl \
     && pip install httplib2 \
     && pip install google-auth-httplib2 \
     && pip install google-cloud-bigquery \
@@ -100,10 +99,9 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base
 
-COPY klaytn-etl/klaytnetl/ /usr/local/lib/python3.7/site-packages/klaytnetl/
-COPY klaytn-etl/ethereumpoaetl/ /usr/local/lib/python3.7/site-packages/ethereumpoaetl/
 
 COPY script/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
